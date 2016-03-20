@@ -4,6 +4,9 @@ import settings
 import praw
 import os
 
+PROVIDERS = ['discord', 'reddit']
+FLAIR_COLORS = ['discord', 'green', 'red', 'orange', 'cyan', 'blue', 'purple']
+
 app = Flask(__name__)
 app.config.update({k: getattr(settings, k) for k in dir(settings)})
 app.debug = app.config.get("DEBUG", False)
@@ -54,6 +57,19 @@ def route_index():
     return render_template("index.html", reddit=session.get('reddit'), discord=session.get('discord'))
 
 
+@app.route('/logout/<provider>')
+def route_logout(provider=None):
+    if provider not in PROVIDERS:
+        return "Invalid Provider", 400
+
+    if provider in session:
+        del session[provider]
+        del session[provider + '_token']
+
+    flash("Logged out of %s" % provider, 'success')
+    return redirect(url_for('.route_index'))
+
+
 @app.route('/redirect/<provider>')
 def route_redirect(provider=None):
     if provider == 'discord':
@@ -76,6 +92,10 @@ def callback(provider=None):
     if request.values.get('error'):
         return request.values['error']
 
+    # Make sure this is a valid provider
+    if provider not in PROVIDERS:
+        return "Invalid Provider", 400
+
     if provider == "discord":
         discord = make_discord_session(state=session.get('discord_state'))
         token = discord.fetch_token(
@@ -84,6 +104,7 @@ def callback(provider=None):
             authorization_response=request.url)
         session['discord_token'] = token
         session['discord'] = get_discord_account()
+        flash('Logged into Discord account %s' % session['discord']['username'], 'success')
     elif provider == "reddit":
         reddit = make_reddit_session(state=session.get('reddit_state'))
 
@@ -102,19 +123,27 @@ def callback(provider=None):
             authorization_response=request.url)
         session['reddit_token'] = token
         session['reddit'] = get_reddit_account()
-    else:
-        return "Invalid Provider", 400
+        flash('Logged into Reddit account %s' % session['reddit']['name'], 'success')
+
     return redirect(url_for('.route_index'))
 
 
 @app.route('/link')
 def link():
+    flair_class = request.values.get('color', 'discord')
+    if flair_class not in FLAIR_COLORS:
+        return "Invalid Flair Color", 400
+
+    for provider in PROVIDERS:
+        if provider + '_token' not in session:
+            return "Invalid Provider Session", 400
+
     session['reddit'] = get_reddit_account()
     session['discord'] = get_discord_account()
 
     res = app.r.set_flair("discordapp", session['reddit']['name'],
                           flair_text="%s#%s" % (session['discord']['username'], session['discord']['discriminator']),
-                          flair_css_class="discord")
+                          flair_css_class=flair_class)
     if len(res['errors']):
         flash("Failed to link accounts!", "error")
     else:

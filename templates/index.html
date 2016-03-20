@@ -4,13 +4,15 @@
   <h1>Sync Reddit Name</h1>
 
   <div>
-    {% with messages = get_flashed_messages() %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-    <ul class=flashes>
-      {% for message in messages %}
-      <li>{{ message }}</li>
+    <div>
+      {% for category, message in messages %}
+      <div class="alert alert-{{ category }}">
+        <p>{{ message }}</p>
+      </div>
       {% endfor %}
-    </ul>
+    </div>
     {% endif %}
     {% endwith %}
   </div>
@@ -18,16 +20,18 @@
   <div>
     <div>
       {% if discord %}
-      Logged into discord as {{ discord['username'] }}#{{ discord['discriminator'] }}
+      Logged into Discord as {{ discord['username'] }}#{{ discord['discriminator'] }}
+      <a class="btn btn-danger" href="/logout/discord">Logout of Discord</a>
       {% else %}
-      <a class="btn btn-primary" href="/redirect/discord">Login to discord</a>
+      <a class="btn btn-primary" href="/redirect/discord">Login to Discord</a>
       {% endif %}
     </div>
     <div style="padding-top: 20px;">
       {% if reddit %}
-      Logged into reddit as {{ reddit['name'] }}
+      Logged into Reddit as {{ reddit['name'] }}
+      <a class="btn btn-danger" href="/logout/reddit">Logout of Reddit</a>
       {% else %}
-      <a class="btn btn-primary" href="/redirect/reddit">Login to reddit</a>
+      <a class="btn btn-primary" href="/redirect/reddit">Login to Reddit</a>
       {% endif %}
     </div>
   </div>
