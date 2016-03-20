@@ -1,33 +1,41 @@
-<h1>Sync Reddit Name</h1>
+{% extends "base.html" %}
+{% block body %}
+<div class="jumbotron">
+  <h1>Sync Reddit Name</h1>
 
-<div>
-  {% with messages = get_flashed_messages() %}
-  {% if messages %}
-  <ul class=flashes>
-    {% for message in messages %}
-    <li>{{ message }}</li>
-    {% endfor %}
-  </ul>
-  {% endif %}
-  {% endwith %}
-</div>
+  <div>
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <ul class=flashes>
+      {% for message in messages %}
+      <li>{{ message }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    {% endwith %}
+  </div>
 
-<div>
-  {% if discord %}
-  Logged into discord as {{ discord['username'] }}#{{ discord['discriminator'] }}
-  {% else %}
-  <a href="/redirect/discord">Login to discord</a>
-  {% endif %}
-  <br />
-  {% if reddit %}
-  Logged into reddit as {{ reddit['name'] }}
-  {% else %}
-  <a href="/redirect/reddit">Login to reddit</a>
-  {% endif %}
-</div>
+  <div>
+    <div>
+      {% if discord %}
+      Logged into discord as {{ discord['username'] }}#{{ discord['discriminator'] }}
+      {% else %}
+      <a class="btn btn-primary" href="/redirect/discord">Login to discord</a>
+      {% endif %}
+    </div>
+    <div style="padding-top: 20px;">
+      {% if reddit %}
+      Logged into reddit as {{ reddit['name'] }}
+      {% else %}
+      <a class="btn btn-primary" href="/redirect/reddit">Login to reddit</a>
+      {% endif %}
+    </div>
+  </div>
 
-<div>
-  {% if reddit and discord %}
-  <a href="/link">Link Accounts!</a>
-  {% endif %}
+  <div>
+    {% if reddit and discord %}
+    <a class="btn btn-primary" href="/link">Link Accounts!</a>
+    {% endif %}
+  </div>
+  {% endblock %}
 </div>
