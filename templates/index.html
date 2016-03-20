@@ -1,7 +1,10 @@
 {% extends "base.html" %}
 {% block body %}
 <div class="jumbotron">
-  <h1>Sync Reddit Name</h1>
+  <h1>Reddit/Discord Account Sync</h1>
+  <p>
+    Want some sick Reddit flair that highlights your awesome Discord tag? Login below with both your Discord and Reddit account to get it!
+  </p>
 
   <div>
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -36,10 +39,37 @@
     </div>
   </div>
 
+  <div style="padding-top:5px; padding-bottom:5px;"></div>
+
+  {% if reddit and discord %}
   <div>
-    {% if reddit and discord %}
-    <a class="btn btn-primary" href="/link">Link Accounts!</a>
-    {% endif %}
+    <div class="btn-group">
+      <button class="btn btn-info dropdown-toggle" type="button" data-toggle="dropdown">Flair Color: <span id="flair">Discord</span><span class="caret"></span></button>
+      <ul class="dropdown-menu">
+        {% for color in colors %}
+        <li><a href="#" data-color="{{ color }}">{{ color|title }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+    <a id="link" class="btn btn-success" href="#">Set Flair</a>
   </div>
+  {% endif %}
   {% endblock %}
 </div>
+
+{% block scripts %}
+<script>
+var currentFlairColor = "discord";
+
+$(document).ready(function () {
+  $(".btn-group a").click(function (event) {
+    currentFlairColor = $(this).text();
+    $("#flair").text($(this).text());
+  });
+
+  $("#link").click(function (event) {
+    window.location = "/link?color=" + currentFlairColor.toLowerCase();
+  });
+});
+</script>
+{% endblock %}

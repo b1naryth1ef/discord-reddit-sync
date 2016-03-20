@@ -54,7 +54,7 @@ def make_reddit_session(token=None, state=None, scope=None):
 
 @app.route('/')
 def route_index():
-    return render_template("index.html", reddit=session.get('reddit'), discord=session.get('discord'))
+    return render_template("index.html", reddit=session.get('reddit'), discord=session.get('discord'), colors=FLAIR_COLORS)
 
 
 @app.route('/logout/<provider>')
