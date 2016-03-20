@@ -2,6 +2,7 @@ from flask import Flask, session, redirect, request, url_for, render_template, f
 from requests_oauthlib import OAuth2Session
 import settings
 import praw
+import os
 
 app = Flask(__name__)
 app.config.update({k: getattr(settings, k) for k in dir(settings)})
@@ -136,4 +137,4 @@ def get_reddit_account():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=14040)
+    app.run(host="0.0.0.0", port=os.getenv("PORT", 14040))
