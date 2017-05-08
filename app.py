@@ -89,22 +89,25 @@ def route_redirect(provider=None):
 
 @app.route('/callback/<provider>')
 def callback(provider=None):
-    if request.values.get('error'):
-        return request.values['error']
-
     # Make sure this is a valid provider
     if provider not in PROVIDERS:
         return "Invalid Provider", 400
 
-    if provider == "discord":
+    if request.values.get('error'):
+        flash('Error logging into %s: %s' % (provider, session['discord']['username']), 'error')
+
+    elif provider == "discord":
         discord = make_discord_session(state=session.get('discord_state'))
+
         token = discord.fetch_token(
             app.config['DISCORD_TOKEN_URL'],
             client_secret=app.config['DISCORD_CLIENT_SECRET'],
             authorization_response=request.url)
         session['discord_token'] = token
         session['discord'] = get_discord_account()
+
         flash('Logged into Discord account %s' % session['discord']['username'], 'success')
+
     elif provider == "reddit":
         reddit = make_reddit_session(state=session.get('reddit_state'))
 
@@ -121,8 +124,10 @@ def callback(provider=None):
             },
             duration="permanent",
             authorization_response=request.url)
+
         session['reddit_token'] = token
         session['reddit'] = get_reddit_account()
+
         flash('Logged into Reddit account %s' % session['reddit']['name'], 'success')
 
     return redirect(url_for('.route_index'))
@@ -144,10 +149,12 @@ def link():
     res = app.r.set_flair("discordapp", session['reddit']['name'],
                           flair_text="%s#%s" % (session['discord']['username'], session['discord']['discriminator']),
                           flair_css_class=flair_class)
+
     if len(res['errors']):
         flash("Failed to link accounts!", "error")
     else:
         flash("Linked Accounts!", "success")
+
     return redirect(url_for('.route_index'))
 
 
