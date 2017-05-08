@@ -94,7 +94,7 @@ def callback(provider=None):
         return 'Invalid Provider', 400
 
     if request.values.get('error'):
-        flash('Error logging into %s: %s' % (provider, session['discord']['username']), 'error')
+        flash('Error logging into %s: %s' % (provider, request.values['error']), 'error')
 
     elif provider == 'discord':
         discord = make_discord_session(state=session.get('discord_state'))
