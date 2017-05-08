@@ -9,8 +9,8 @@ FLAIR_COLORS = ['discord', 'green', 'red', 'orange', 'cyan', 'blue', 'purple']
 
 app = Flask(__name__)
 app.config.update({k: getattr(settings, k) for k in dir(settings)})
-app.debug = app.config.get("DEBUG", False)
-app.r = praw.Reddit(user_agent="Discord Reddit Syncer")
+app.debug = app.config.get('DEBUG', False)
+app.r = praw.Reddit(user_agent='Discord Reddit Syncer')
 app.r.login(app.config['REDDIT_USERNAME'], app.config['REDDIT_PASSWORD'], disable_warning=True)
 
 
@@ -54,19 +54,19 @@ def make_reddit_session(token=None, state=None, scope=None):
 
 @app.route('/')
 def route_index():
-    return render_template("index.html", reddit=session.get('reddit'), discord=session.get('discord'), colors=FLAIR_COLORS)
+    return render_template('index.html', reddit=session.get('reddit'), discord=session.get('discord'), colors=FLAIR_COLORS)
 
 
 @app.route('/logout/<provider>')
 def route_logout(provider=None):
     if provider not in PROVIDERS:
-        return "Invalid Provider", 400
+        return 'Invalid Provider', 400
 
     if provider in session:
         del session[provider]
         del session[provider + '_token']
 
-    flash("Logged out of %s" % provider, 'success')
+    flash('Logged out of %s' % provider, 'success')
     return redirect(url_for('.route_index'))
 
 
@@ -79,33 +79,36 @@ def route_redirect(provider=None):
     elif provider == 'reddit':
         reddit = make_reddit_session(scope=('identity', ))
         authorization_url, state = reddit.authorization_url(app.config['REDDIT_AUTH_URL'])
-        authorization_url += "&duration=permanent"
+        authorization_url += '&duration=permanent'
         session['reddit_state'] = state
     else:
-        return "Invalid Provider", 400
+        return 'Invalid Provider', 400
 
     return redirect(authorization_url)
 
 
 @app.route('/callback/<provider>')
 def callback(provider=None):
-    if request.values.get('error'):
-        return request.values['error']
-
     # Make sure this is a valid provider
     if provider not in PROVIDERS:
-        return "Invalid Provider", 400
+        return 'Invalid Provider', 400
 
-    if provider == "discord":
+    if request.values.get('error'):
+        flash('Error logging into %s: %s' % (provider, session['discord']['username']), 'error')
+
+    elif provider == 'discord':
         discord = make_discord_session(state=session.get('discord_state'))
+
         token = discord.fetch_token(
             app.config['DISCORD_TOKEN_URL'],
             client_secret=app.config['DISCORD_CLIENT_SECRET'],
             authorization_response=request.url)
         session['discord_token'] = token
         session['discord'] = get_discord_account()
+
         flash('Logged into Discord account %s' % session['discord']['username'], 'success')
-    elif provider == "reddit":
+
+    elif provider == 'reddit':
         reddit = make_reddit_session(state=session.get('reddit_state'))
 
         token = reddit.fetch_token(
@@ -117,12 +120,14 @@ def callback(provider=None):
             state=session.get('reddit_state'),
             auth=(app.config['REDDIT_CLIENT_ID'], app.config['REDDIT_CLIENT_SECRET']),
             headers={
-                "User-Agent": "Discord Reddit Syncer",
+                'User-Agent': 'Discord Reddit Syncer',
             },
-            duration="permanent",
+            duration='permanent',
             authorization_response=request.url)
+
         session['reddit_token'] = token
         session['reddit'] = get_reddit_account()
+
         flash('Logged into Reddit account %s' % session['reddit']['name'], 'success')
 
     return redirect(url_for('.route_index'))
@@ -132,22 +137,24 @@ def callback(provider=None):
 def link():
     flair_class = request.values.get('color', 'discord')
     if flair_class not in FLAIR_COLORS:
-        return "Invalid Flair Color", 400
+        return 'Invalid Flair Color', 400
 
     for provider in PROVIDERS:
         if provider + '_token' not in session:
-            return "Invalid Provider Session", 400
+            return 'Invalid Provider Session', 400
 
     session['reddit'] = get_reddit_account()
     session['discord'] = get_discord_account()
 
-    res = app.r.set_flair("discordapp", session['reddit']['name'],
-                          flair_text="%s#%s" % (session['discord']['username'], session['discord']['discriminator']),
+    res = app.r.set_flair('discordapp', session['reddit']['name'],
+                          flair_text='%s#%s' % (session['discord']['username'], session['discord']['discriminator']),
                           flair_css_class=flair_class)
+
     if len(res['errors']):
-        flash("Failed to link accounts!", "error")
+        flash('Failed to link accounts!', 'error')
     else:
-        flash("Linked Accounts!", "success")
+        flash('Linked Accounts!', 'success')
+
     return redirect(url_for('.route_index'))
 
 
@@ -159,11 +166,11 @@ def get_discord_account():
 
 def get_reddit_account():
     reddit = make_reddit_session(token=session.get('reddit_token'))
-    user = reddit.get("https://oauth.reddit.com/api/v1/me", headers={
-        "User-Agent": "Discord Reddit Syncer"
+    user = reddit.get('https://oauth.reddit.com/api/v1/me', headers={
+        'User-Agent': 'Discord Reddit Syncer'
     }).json()
     return user
 
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 14040)))
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 14040)))
