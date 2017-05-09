@@ -94,7 +94,7 @@ def callback(provider=None):
         return 'Invalid Provider', 400
 
     if request.values.get('error'):
-        flash('Error logging into %s: %s' % (provider, request.values['error']), 'error')
+        flash('Error logging into %s: %s' % (provider, request.values['error']), 'danger')
 
     elif provider == 'discord':
         discord = make_discord_session(state=session.get('discord_state'))
@@ -151,7 +151,7 @@ def link():
                           flair_css_class=flair_class)
 
     if len(res['errors']):
-        flash('Failed to link accounts!', 'error')
+        flash('Failed to link accounts!', 'danger')
     else:
         flash('Linked Accounts!', 'success')
 
